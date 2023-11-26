@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { useWorkoutContext } from '../hooks/useWorkoutContext'
+
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -6,18 +8,26 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+import { IoIosClose } from "react-icons/io";
+ 
 
 
 const WorkoutForm = () =>{
     const [open, setOpen] = useState(false)
+
+    const { dispatch } = useWorkoutContext()
+
 
     const [title, setTitle] = useState('')
     const [sets, setSets] = useState('')
     const [reps, setReps] = useState('')
     const [load, setLoad] = useState('')
     const [error, setError] = useState(null)
+    const [emptyFields, setEmptyFields] = useState([])
 
     const handleOpen = () => {
         setOpen(true)
@@ -43,19 +53,23 @@ const WorkoutForm = () =>{
 
         if (!response.ok){
             setError(json.error)
+            setEmptyFields(json.emptyFields)
+            setOpen(true)
         }
         if (response.ok){
             setError(null)
+            setEmptyFields([])
             console.log('new workout added', json)
+            dispatch({type: 'CREATE_WORKOUT', payload: json})
+            setOpen(false)
         }
+
 
         setTitle('')
         setSets('')
         setReps('')
         setLoad('')
         setError(null)
-
-        setOpen(false)
     }
 
     return(
@@ -65,11 +79,26 @@ const WorkoutForm = () =>{
                     Add workout
                 </Button>
             </Grid>
-            <Dialog open={open} onClose={handleClose}>
-                <Box component = "form" onSubmit = {(e) => handleSubmit(e)}>
-                    <DialogTitle>New Workout</DialogTitle>
-                    <DialogContent>
+            <Dialog open={open} onClose={handleClose} sx = {{ p: 0.8 }}>
+                <Box component = "form" sx = {{ pt: 2 }} onSubmit = {(e) => handleSubmit(e)}>
+                    <DialogTitle sx = {{display: 'inline'}}>New Workout</DialogTitle>
+                    <IconButton
+                        onClick={handleClose}
+                        sx={{
+                            position: 'absolute',
+                            right: 15,
+                            top: 15,
+                            m: 0,
+                            p: 0,
+                            color: (theme) => theme.palette.grey[500],
+                        }}
+                        >
+                        <IoIosClose />
+                    </IconButton>
+                    <DialogContent sx = {{m: 0, pt: 0}}>
                         <TextField
+                            error = {emptyFields.includes('title')}
+                            required
                             autoFocus
                             margin="dense"
                             id="name"
@@ -77,9 +106,10 @@ const WorkoutForm = () =>{
                             fullWidth
                             variant="standard"
                             onChange = {(e) => setTitle(e.target.value)}
-                            value = {title}
+                            value = {title}                            
                         />
                         <TextField
+                            required
                             autoFocus
                             margin="dense"
                             id="name"
@@ -87,8 +117,10 @@ const WorkoutForm = () =>{
                             variant="standard"
                             onChange = {(e) => setSets(e.target.value)}
                             value = {sets}
+                            error = {emptyFields.includes('sets')}
                         />
                         <TextField
+                            required
                             autoFocus
                             margin="dense"
                             id="name"
@@ -96,6 +128,7 @@ const WorkoutForm = () =>{
                             variant="standard"
                             onChange = {(e) => setReps(e.target.value)}
                             value = {reps}
+                            error = {emptyFields.includes('reps')}
                         />
                         <TextField
                             autoFocus
@@ -113,7 +146,6 @@ const WorkoutForm = () =>{
                     </DialogActions>
                 </Box>
             </Dialog>
-            {error && <div className="error">{error}</div>}
         </div>
     )
 }

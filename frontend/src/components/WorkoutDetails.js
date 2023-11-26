@@ -6,8 +6,23 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { ThemeProvider } from '@emotion/react';
 import Theme from '../Theme';
+import { useWorkoutContext } from '../hooks/useWorkoutContext';
 
 const WorkoutDetails = ({ workout }) => {
+
+  const { dispatch } = useWorkoutContext()
+
+  const handleClick = async () => {
+    const response = await fetch('/api/workouts/' + workout._id, {
+      method: 'DELETE'
+    })
+    const json = await response.json()
+
+    if (response.ok){
+      dispatch({type: 'DELETE', payload: json})
+    }
+  }
+
   return (
     <div className="workout-details">
       <ThemeProvider theme={Theme}>
@@ -29,7 +44,7 @@ const WorkoutDetails = ({ workout }) => {
             </Typography>
           </CardContent>
           <CardActions>
-            <Button size="small">Learn More</Button>
+            <Button size="small" color = 'error' onClick={handleClick}>Delete</Button>
           </CardActions>
         </Card>
       </ThemeProvider>
